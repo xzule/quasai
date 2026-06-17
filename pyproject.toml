@@ -1,0 +1,12 @@
+[project]
+name = "quasai"
+version = "0.1.0"
+description = "Local test case generation service"
+requires-python = ">=3.11"
+dependencies = [
+    "typer>=0.12",
+    "httpx>=0.28",
+]
+
+[project.scripts]
+quasai = "quasai.cli:app"
