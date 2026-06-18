@@ -1,0 +1,16 @@
+docs/
+tests/
+.git/
+__pycache__/
+.pytest_cache/
+*.pyc
+.venv/
+venv/
+.gitignore
+Agents.md
+Spec.md
+*.md
+install.sh
+install.ps1
+docker-compose.yml
+.github/
