@@ -105,26 +105,28 @@ class OllamaProvider(LLMProvider):
 
     async def _generate_chunk(self, chunk: Chunk) -> list[TestCase]:
         system = (
-            "Write ALL field values in the SAME language as the requirements. "
-            "Only JSON field names and technical terms stay in English.\n"
-            "Always output a valid JSON array."
+            "Пиши ВСЕ значения полей на ТОМ ЖЕ языке, что и требования. "
+            "Только имена JSON-полей и технические термины остаются на английском.\n"
+            "Всегда выводи валидный JSON-массив."
         )
         prompt = (
-            "Generate test cases using ISTQB test design techniques:\n"
-            "- Equivalence Partitioning: cover valid (positive) and invalid (negative) equivalence classes\n"
-            "- Boundary Value Analysis: when numeric ranges or limits exist, "
-            "test boundary values (min, just below min, max, just above max)\n"
-            "- State Transition Testing: when requirements describe states, "
-            "statuses, or workflows, test valid and invalid state transitions\n"
+            "Сгенерируй тест-кейсы, используя техники тест-дизайна ISTQB:\n"
+            "- Разбиение на классы эквивалентности: покрой валидные (позитивные) "
+            "и невалидные (негативные) классы\n"
+            "- Анализ граничных значений: если есть числовые диапазоны или лимиты, "
+            "протестируй граничные значения (минимум, чуть ниже минимума, "
+            "максимум, чуть выше максимума)\n"
+            "- Тестирование переходов состояний: если требования описывают состояния, "
+            "статусы или workflow, протестируй валидные и невалидные переходы\n"
             "\n"
-            'Example:\n'
+            'Пример:\n'
             '{"id":"TC-001",'
-            '"title":"Login with password at minimum length",'
-            '"preconditions":"User is registered, minimum password length is 8 characters",'
-            '"steps":["Enter username","Enter 8-character password","Click Login"],'
-            '"expectedResult":"User is logged in"}\n'
+            '"title":"Вход с паролем минимальной длины",'
+            '"preconditions":"Пользователь зарегистрирован, минимальная длина пароля 8 символов",'
+            '"steps":["Ввести логин","Ввести пароль из 8 символов","Нажать Войти"],'
+            '"expectedResult":"Пользователь вошёл в систему"}\n'
             "\n"
-            "Do not close the object before all fields are written.\n"
+            "Не закрывай объект до того, как все поля будут записаны.\n"
             "\n"
             f"Requirements: {chunk.prompt}\n"
         )
