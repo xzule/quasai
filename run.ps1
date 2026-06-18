@@ -18,9 +18,11 @@ if (-not (Test-Path -LiteralPath $InputPath)) {
     exit 1
 }
 
-docker compose -p quasai run --rm --entrypoint ollama ollama pull phi4-mini
-
 docker compose -p quasai up -d ollama
+
+Start-Sleep -Seconds 5
+
+docker compose -p quasai exec ollama ollama pull phi4-mini
 
 docker compose -p quasai run --rm --entrypoint quasai app /input/$FileName
 
