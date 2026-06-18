@@ -8,7 +8,7 @@ import typer
 
 from quasai.generator import OllamaProvider, generate as generate_cases
 from quasai.parser import parse_markdown
-from quasai.serializer import to_json
+from quasai.serializer import to_csv, to_json
 
 app = typer.Typer()
 
@@ -16,14 +16,17 @@ app = typer.Typer()
 @app.command()
 def generate(
     input: str = typer.Argument(..., help="Path to input Markdown file"),
-    output: str | None = typer.Option(None, "-o", help="Path to output JSON file"),
 ) -> None:
     in_path = Path(input)
     if not in_path.exists():
         print("Файл не найден", file=sys.stderr, flush=True)
         raise typer.Exit(code=1)
 
-    out_path = Path(output) if output else in_path.with_suffix(".json")
+    stem = in_path.stem
+    out_dir = Path("/output")
+    out_dir.mkdir(parents=True, exist_ok=True)
+    out_json = out_dir / f"{stem}.json"
+    out_csv = out_dir / f"{stem}.csv"
 
     print("Парсинг требований", flush=True)
     try:
@@ -46,5 +49,8 @@ def generate(
         raise typer.Exit(code=1)
 
     print("Сохранение результата", flush=True)
-    to_json(cases, str(out_path))
-    print(f"Результат сохранён в {out_path}", flush=True)
+    to_json(cases, str(out_json))
+    to_csv(cases, str(out_csv))
+    print("Результаты сохранены в:", flush=True)
+    print(f"  ./output/{stem}.json", flush=True)
+    print(f"  ./output/{stem}.csv", flush=True)

@@ -17,13 +17,13 @@ cd quasai
 
 ```bash
 # Linux / macOS
-./run.sh input/requirements.md output/tests.json
+./run.sh requirements.md
 
 # Windows PowerShell
-.\run.ps1 -InputFile input/requirements.md -OutputFile output/tests.json
+.\run.ps1 requirements.md
 ```
 
-The script starts the LLM, runs generation, waits for the result, and stops all services automatically. The result is saved to the specified output path.
+Place your `.md` file in the `input/` directory first. The script starts the LLM, runs generation, and stops all services automatically. Results are saved to `./output/{filename}.json` and `./output/{filename}.csv`.
 
 ## Input format
 

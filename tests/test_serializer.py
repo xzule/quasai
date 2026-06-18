@@ -1,9 +1,10 @@
+import csv
 import json
 from pathlib import Path
 
 import pytest
 
-from quasai.serializer import to_json, from_json
+from quasai.serializer import from_json, to_csv, to_json
 from quasai.types import TestCase
 
 
@@ -106,3 +107,58 @@ def test_to_json_creates_parent_dirs(tmp_path: Path) -> None:
     with open(path) as f:
         data = json.load(f)
     assert data[0]["id"] == "TC-001"
+
+
+def test_to_csv_equal_steps(tmp_path: Path) -> None:
+    cases = [
+        TestCase(id="TC-001", title="A", preconditions="P1", steps=["Step 1", "Step 2"], expected_result="R1"),
+        TestCase(id="TC-002", title="B", preconditions="P2", steps=["Step 3", "Step 4"], expected_result="R2"),
+    ]
+    path = tmp_path / "out.csv"
+
+    to_csv(cases, str(path))
+
+    with open(path, encoding="utf-8-sig") as f:
+        reader = csv.reader(f, delimiter=";")
+        rows = list(reader)
+    assert rows[0] == ["id", "title", "preconditions", "step0", "step1", "expectedResult"]
+    assert rows[1] == ["TC-001", "A", "P1", "Step 1", "Step 2", "R1"]
+    assert rows[2] == ["TC-002", "B", "P2", "Step 3", "Step 4", "R2"]
+
+
+def test_to_csv_unequal_steps(tmp_path: Path) -> None:
+    cases = [
+        TestCase(id="TC-001", title="A", steps=["Step 1", "Step 2", "Step 3"], expected_result="R1"),
+        TestCase(id="TC-002", title="B", steps=["Step 1"], expected_result="R2"),
+    ]
+    path = tmp_path / "out.csv"
+
+    to_csv(cases, str(path))
+
+    with open(path, encoding="utf-8-sig") as f:
+        reader = csv.reader(f, delimiter=";")
+        rows = list(reader)
+    assert rows[0] == ["id", "title", "preconditions", "step0", "step1", "step2", "expectedResult"]
+    assert rows[1] == ["TC-001", "A", "", "Step 1", "Step 2", "Step 3", "R1"]
+    assert rows[2] == ["TC-002", "B", "", "Step 1", "", "", "R2"]
+
+
+def test_to_csv_empty(tmp_path: Path) -> None:
+    path = tmp_path / "empty.csv"
+
+    to_csv([], str(path))
+
+    with open(path, encoding="utf-8-sig") as f:
+        content = f.read()
+    assert content.strip() == "id;title;preconditions;expectedResult"
+
+
+def test_to_csv_bom(tmp_path: Path) -> None:
+    cases = [TestCase(id="TC-001", title="Test")]
+    path = tmp_path / "bom.csv"
+
+    to_csv(cases, str(path))
+
+    with open(path, "rb") as f:
+        raw = f.read(3)
+    assert raw == b"\xef\xbb\xbf"

@@ -1,44 +1,27 @@
 param(
     [Parameter(Mandatory, Position=0)]
-    [string]$InputFile,
-    [Parameter(Mandatory, Position=1)]
-    [string]$OutputFile
+    [string]$FileName
 )
 
 $ProjectRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
+$InputPath = "$ProjectRoot\input\$FileName"
 
-if (-not (Test-Path -LiteralPath $InputFile)) {
-    Write-Host "Error: input file not found: $InputFile"
+if (-not (Test-Path -LiteralPath $InputPath)) {
+    Write-Host "Error: файл не найден в $ProjectRoot\input"
     Write-Host ""
-    Write-Host "Usage: .\run.ps1 -InputFile <path> -OutputFile <path>"
-    Write-Host ""
-    Write-Host "  Examples:"
-    Write-Host "    .\run.ps1 -InputFile .\input\test.md -OutputFile .\output\test.json"
-    Write-Host "    .\run.ps1 -InputFile C:\full\path\test.md -OutputFile C:\full\path\test.json"
+    Write-Host "Поместите .md файл в папку input/ и укажите только имя:"
+    Write-Host "  .\run.ps1 requirements.md"
     exit 1
-}
-
-New-Item -ItemType Directory -Path "$ProjectRoot\input" -Force | Out-Null
-New-Item -ItemType Directory -Path "$ProjectRoot\output" -Force | Out-Null
-
-$InputLeaf = Split-Path -Leaf $InputFile
-$InputDest = "$ProjectRoot\input\$InputLeaf"
-if ((Resolve-Path $InputFile -ErrorAction SilentlyContinue).Path -ne (Resolve-Path $InputDest -ErrorAction SilentlyContinue).Path) {
-    Copy-Item -Path $InputFile -Destination $InputDest -Force
 }
 
 docker compose -p quasai up -d ollama
 
-docker compose -p quasai run --rm --entrypoint quasai app `
-    /input/$InputLeaf `
-    -o /output/$(Split-Path -Leaf $OutputFile)
-
-$OutputLeaf = Split-Path -Leaf $OutputFile
-$OutputTemp = "$ProjectRoot\output\$OutputLeaf"
-if ((Resolve-Path $OutputFile -ErrorAction SilentlyContinue).Path -ne (Resolve-Path $OutputTemp -ErrorAction SilentlyContinue).Path) {
-    Copy-Item -Path $OutputTemp -Destination $OutputFile -Force
-}
+docker compose -p quasai run --rm --entrypoint quasai app /input/$FileName
 
 docker compose -p quasai down
 
-Write-Host "Done: $OutputFile"
+$Stem = $FileName -replace '\.md$', ''
+Write-Host ""
+Write-Host "Результаты сохранены в:"
+Write-Host "  .\output\$Stem.json"
+Write-Host "  .\output\$Stem.csv"

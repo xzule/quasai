@@ -1,3 +1,4 @@
+import csv
 import json
 from pathlib import Path
 
@@ -39,6 +40,21 @@ def to_json(test_cases: list[TestCase], path: str) -> None:
     Path(path).parent.mkdir(parents=True, exist_ok=True)
     with open(path, "w", encoding="utf-8") as f:
         f.write(raw)
+
+
+def to_csv(test_cases: list[TestCase], path: str) -> None:
+    max_steps = max((len(tc.steps) for tc in test_cases), default=0)
+    header = ["id", "title", "preconditions"] \
+           + [f"step{i}" for i in range(max_steps)] \
+           + ["expectedResult"]
+    Path(path).parent.mkdir(parents=True, exist_ok=True)
+    with open(path, "w", newline="", encoding="utf-8-sig") as f:
+        writer = csv.writer(f, delimiter=";")
+        writer.writerow(header)
+        for tc in test_cases:
+            steps = tc.steps + [""] * (max_steps - len(tc.steps))
+            row = [tc.id, tc.title, tc.preconditions, *steps, tc.expected_result]
+            writer.writerow(row)
 
 
 def from_json(path: str) -> list[TestCase]:
