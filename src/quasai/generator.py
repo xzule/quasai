@@ -132,7 +132,7 @@ class OllamaProvider(LLMProvider):
                     "model": self._model,
                     "prompt": prompt,
                     "stream": False,
-                    "options": {"num_predict": 1500, "temperature": 0.0},
+                    "options": {"temperature": 0.0},
                 },
             )
         response.raise_for_status()
