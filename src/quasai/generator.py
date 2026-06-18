@@ -104,38 +104,37 @@ class OllamaProvider(LLMProvider):
         return all_cases
 
     async def _generate_chunk(self, chunk: Chunk) -> list[TestCase]:
-        system = (
-            "Пиши ВСЕ значения полей на ТОМ ЖЕ языке, что и требования. "
-            "Только имена JSON-полей и технические термины остаются на английском.\n"
-            "Всегда выводи валидный JSON-массив."
-        )
         prompt = (
-            "Сгенерируй тест-кейсы, используя техники тест-дизайна ISTQB:\n"
-            "- Разбиение на классы эквивалентности: покрой валидные (позитивные) "
-            "и невалидные (негативные) классы\n"
-            "- Анализ граничных значений: если есть числовые диапазоны или лимиты, "
-            "протестируй граничные значения (минимум, чуть ниже минимума, "
-            "максимум, чуть выше максимума)\n"
-            "- Тестирование переходов состояний: если требования описывают состояния, "
-            "статусы или workflow, протестируй валидные и невалидные переходы\n"
+            "<|system|>\n"
+            "Requirements are in Russian. Write ALL field values in Russian. "
+            "Only JSON field names and technical terms stay in English.\n"
+            "<|end|>\n"
+            "<|user|>\n"
+            "Generate test cases using ISTQB test design techniques:\n"
+            "- Equivalence Partitioning: cover valid (positive) and invalid (negative) equivalence classes\n"
+            "- Boundary Value Analysis: when numeric ranges or limits exist, "
+            "test boundary values (min, just below min, max, just above max)\n"
+            "- State Transition Testing: when requirements describe states, "
+            "statuses, or workflows, test valid and invalid state transitions\n"
             "\n"
-            'Пример:\n'
+            'Example:\n'
             '{"id":"TC-001",'
-            '"title":"Вход с паролем минимальной длины",'
-            '"preconditions":"Пользователь зарегистрирован, минимальная длина пароля 8 символов",'
-            '"steps":["Ввести логин","Ввести пароль из 8 символов","Нажать Войти"],'
-            '"expectedResult":"Пользователь вошёл в систему"}\n'
+            '"title":"Login with password at minimum length",'
+            '"preconditions":"User is registered, minimum password length is 8 characters",'
+            '"steps":["Enter username","Enter 8-character password","Click Login"],'
+            '"expectedResult":"User is logged in"}\n'
             "\n"
-            "Не закрывай объект до того, как все поля будут записаны.\n"
+            "Do not close the object before all fields are written.\n"
             "\n"
             f"Requirements: {chunk.prompt}\n"
+            "<|end|>\n"
+            "<|assistant|>\n"
         )
         async with httpx.AsyncClient(timeout=300) as client:
             response = await client.post(
                 f"{self._base_url}/api/generate",
                 json={
                     "model": self._model,
-                    "system": system,
                     "prompt": prompt,
                     "stream": False,
                     "options": {"num_predict": 1500, "temperature": 0.0},
