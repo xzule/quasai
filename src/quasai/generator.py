@@ -133,7 +133,7 @@ class OllamaProvider(LLMProvider):
             "\n"
             f"Requirements: {chunk.prompt}\n"
         )
-        async with httpx.AsyncClient(timeout=300) as client:
+        async with httpx.AsyncClient(timeout=600) as client:
             response = await client.post(
                 f"{self._base_url}/api/generate",
                 json={
