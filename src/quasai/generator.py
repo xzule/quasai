@@ -110,14 +110,10 @@ class OllamaProvider(LLMProvider):
             "- Equivalence Partitioning: cover valid (positive) and invalid (negative) equivalence classes\n"
             "- Boundary Value Analysis: when numeric ranges or limits exist, test boundary values (min, just below min, max, just above max)\n"
             "- State Transition Testing: when requirements describe states, statuses, or workflows, test valid and invalid state transitions\n"
-            "Each case is an object with fields: id, title, preconditions, "
-            "steps (array of strings), expectedResult (string).\n"
-            "IMPORTANT: Write all field values in the same language as the requirements "
-            "in the Heading section below. "
-            "Only JSON field names and technical terms (e.g. API, login, database, UI) stay in English.\n"
-            "Do not close the object before all fields are written. "
-            "JSON array only.\n\n"
-            f"Heading: {chunk.prompt}\n"
+            "Each case is an object with fields: id, title, preconditions, steps (array of strings), expectedResult (string).\n"
+            "Do not close the object before all fields are written.\n\n"
+            f"Requirements: {chunk.prompt}\n"
+            "IMPORTANT: Write all field values in the same language as the requirements. Only JSON field names and technical terms stay in English.\n"
         )
         async with httpx.AsyncClient(timeout=300) as client:
             response = await client.post(
