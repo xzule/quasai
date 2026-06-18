@@ -33,9 +33,9 @@ def to_json(test_cases: list[TestCase], path: str) -> None:
     raw = json.dumps(data, ensure_ascii=False, indent=2)
     if len(raw.encode("utf-8")) > _MAX_SIZE:
         raise ValueError(
-            "Размер результата превышает 10 МБ. "
-            "Разбейте входные требования на несколько файлов "
-            "и запустите генерацию для каждого отдельно"
+            "Result size exceeds 10 MB. "
+            "Split the input requirements into multiple files "
+            "and run generation for each separately"
         )
     Path(path).parent.mkdir(parents=True, exist_ok=True)
     with open(path, "w", encoding="utf-8") as f:

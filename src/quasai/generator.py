@@ -44,7 +44,7 @@ class OllamaProvider(LLMProvider):
         chunks: list[Chunk] = []
         buffer_parts: list[str] = []
         buffer_count = 0
-        buffer_label = requirements.title or "Требования"
+        buffer_label = requirements.title or "Requirements"
 
         def flush(label: str) -> None:
             nonlocal buffer_parts, buffer_count
@@ -73,7 +73,7 @@ class OllamaProvider(LLMProvider):
         if not chunks:
             chunks.append(Chunk(
                 prompt=f"Заголовок: {requirements.title}\n",
-                label=requirements.title or "Требования",
+                label=requirements.title or "Requirements",
                 item_count=1,
             ))
 
@@ -88,7 +88,7 @@ class OllamaProvider(LLMProvider):
         all_cases: list[TestCase] = []
         for i, chunk in enumerate(chunks, 1):
             if progress:
-                progress(f"Генерация: {chunk.label} ({i}/{len(chunks)})")
+                progress(f"Generating: {chunk.label} ({i}/{len(chunks)})")
             for attempt in range(2):
                 try:
                     cases = await self._generate_chunk(chunk)
@@ -97,27 +97,27 @@ class OllamaProvider(LLMProvider):
                 except json.JSONDecodeError:
                     if attempt == 0:
                         if progress:
-                            progress(f"Повтор: {chunk.label}")
+                            progress(f"Retry: {chunk.label}")
                     else:
                         if progress:
-                            progress(f"Пропущен: {chunk.label}")
+                            progress(f"Skipped: {chunk.label}")
         for j, tc in enumerate(all_cases, 1):
             tc.id = f"TC-{j:03d}"
         return all_cases
 
     async def _generate_chunk(self, chunk: Chunk) -> list[TestCase]:
         prompt = (
-            "Сгенерируй JSON-массив тест-кейсов.\n"
-            f"По одному короткому кейсу на каждое требование ({chunk.item_count} шт).\n"
-            "Каждый кейс — объект с полями: id, title, preconditions, "
-            "steps (массив строк), expectedResult (строка).\n"
-            "Пример: {\"id\":\"TC-001\",\"title\":\"Вход\","
-            '"preconditions":"Юзер зарегистрирован",'
-            '"steps":["Ввести логин","Нажать вход"],'
-            '"expectedResult":"Юзер авторизован"}\n'
-            "Не закрывай объект до конца всех полей. "
-            "Только JSON-массив.\n\n"
-            f"Заголовок: {chunk.prompt}\n"
+            "Generate a JSON array of test cases.\n"
+            f"One short test case per requirement ({chunk.item_count} total).\n"
+            "Each case is an object with fields: id, title, preconditions, "
+            "steps (array of strings), expectedResult (string).\n"
+            "Example: {\"id\":\"TC-001\",\"title\":\"Login\","
+            '"preconditions":"User is registered",'
+            '"steps":["Enter login","Click submit"],'
+            '"expectedResult":"User is logged in"}\n'
+            "Do not close the object before all fields are written. "
+            "JSON array only.\n\n"
+            f"Heading: {chunk.prompt}\n"
         )
         async with httpx.AsyncClient(timeout=300) as client:
             response = await client.post(

@@ -67,5 +67,5 @@ def test_generate_progress_messages(tmp_path: Path) -> None:
                     result = runner.invoke(app, [str(input_path)])
 
     assert result.exit_code == 0
-    assert "Парсинг требований" in result.stdout
-    assert "Результаты сохранены" in result.stdout
+    assert "Parsing requirements" in result.stdout
+    assert "Results saved" in result.stdout

@@ -93,7 +93,7 @@ def test_to_json_exceeds_10mb(tmp_path: Path) -> None:
     ]
     path = tmp_path / "large.json"
 
-    with pytest.raises(ValueError, match="10 МБ"):
+    with pytest.raises(ValueError, match="10 MB"):
         to_json(cases, str(path))
 
 

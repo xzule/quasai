@@ -23,9 +23,3 @@ docker compose -p quasai up -d ollama
 docker compose -p quasai run --rm --entrypoint quasai app "/input/$1"
 
 docker compose -p quasai down
-
-STEM="${1%.md}"
-echo ""
-echo "Results saved in:"
-echo "  ./output/$STEM.json"
-echo "  ./output/$STEM.csv"
