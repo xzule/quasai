@@ -19,7 +19,6 @@ _JSON_ARRAY_RE = re.compile(r"\[.*\]", re.DOTALL)
 class Chunk:
     prompt: str
     label: str
-    item_count: int
 
 
 class LLMProvider:
@@ -51,7 +50,7 @@ class OllamaProvider(LLMProvider):
             if not buffer_parts:
                 return
             prompt = "\n".join(buffer_parts)
-            chunks.append(Chunk(prompt=prompt, label=label, item_count=buffer_count or 1))
+            chunks.append(Chunk(prompt=prompt, label=label))
             buffer_parts = []
             buffer_count = 0
 
@@ -74,7 +73,6 @@ class OllamaProvider(LLMProvider):
             chunks.append(Chunk(
                 prompt=f"Заголовок: {requirements.title}\n",
                 label=requirements.title or "Requirements",
-                item_count=1,
             ))
 
         return chunks
@@ -108,9 +106,12 @@ class OllamaProvider(LLMProvider):
     async def _generate_chunk(self, chunk: Chunk) -> list[TestCase]:
         prompt = (
             "Generate a JSON array of test cases.\n"
-            f"One short test case per requirement ({chunk.item_count} total).\n"
             "Write in the same language as the requirements below. "
             "Keep technical terms (e.g. API, login, database, UI) in English.\n"
+            "Use ISTQB test design techniques:\n"
+            "- Equivalence Partitioning: cover valid (positive) and invalid (negative) equivalence classes\n"
+            "- Boundary Value Analysis: when numeric ranges or limits exist, test boundary values (min, just below min, max, just above max)\n"
+            "- State Transition Testing: when requirements describe states, statuses, or workflows, test valid and invalid state transitions\n"
             "Each case is an object with fields: id, title, preconditions, "
             "steps (array of strings), expectedResult (string).\n"
             "Example: {\"id\":\"TC-001\",\"title\":\"Login\","
