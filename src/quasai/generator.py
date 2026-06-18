@@ -106,18 +106,14 @@ class OllamaProvider(LLMProvider):
     async def _generate_chunk(self, chunk: Chunk) -> list[TestCase]:
         prompt = (
             "Generate a JSON array of test cases.\n"
-            "Write in the same language as the requirements below. "
-            "Keep technical terms (e.g. API, login, database, UI) in English.\n"
             "Use ISTQB test design techniques:\n"
             "- Equivalence Partitioning: cover valid (positive) and invalid (negative) equivalence classes\n"
             "- Boundary Value Analysis: when numeric ranges or limits exist, test boundary values (min, just below min, max, just above max)\n"
             "- State Transition Testing: when requirements describe states, statuses, or workflows, test valid and invalid state transitions\n"
             "Each case is an object with fields: id, title, preconditions, "
             "steps (array of strings), expectedResult (string).\n"
-            "Example: {\"id\":\"TC-001\",\"title\":\"Login\","
-            '"preconditions":"User is registered",'
-            '"steps":["Enter login","Click submit"],'
-            '"expectedResult":"User is logged in"}\n'
+            "IMPORTANT: Write all field values in the same language as the requirements below. "
+            "Only JSON field names and technical terms (e.g. API, login, database, UI) stay in English.\n"
             "Do not close the object before all fields are written. "
             "JSON array only.\n\n"
             f"Heading: {chunk.prompt}\n"
