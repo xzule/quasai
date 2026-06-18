@@ -12,7 +12,7 @@ from quasai.types import Requirements, Section, TestCase
 
 _DEFAULT_MODEL = "phi4-mini"
 _DEFAULT_URL = "http://ollama:11434"
-_CHUNK_SIZE = 5
+_CHUNK_SIZE = 3
 
 _JSON_ARRAY_RE = re.compile(r"\[.*\]", re.DOTALL)
 
