@@ -113,6 +113,13 @@ class OllamaProvider(LLMProvider):
             "- State Transition Testing: when requirements describe states, "
             "statuses, or workflows, test valid and invalid state transitions\n"
             "\n"
+            "Output ONLY a JSON array of flat objects. "
+            "Each object MUST have exactly these 5 fields: "
+            "id (string), title (string), preconditions (string), "
+            "steps (array of strings), expectedResult (string). "
+            "Do NOT add technique names, equivalence classes, boundary values, "
+            "state transitions, or any other fields.\n"
+            "\n"
             'Example:\n'
             '{"id":"TC-001",'
             '"title":"Login with password at minimum length",'
