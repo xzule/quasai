@@ -165,6 +165,27 @@ def _fix_json(text: str) -> str:
     return text.strip()
 
 
+def _repair_json(text: str) -> list[dict] | None:
+    """Try to repair truncated JSON by closing unclosed string, object, array."""
+    candidates = [text]
+    if not text.endswith("]"):
+        candidates.append(text + "]")
+    if not text.endswith('"]'):
+        candidates.append(text + '"]')
+    if not text.endswith('"}'):
+        candidates.append(text + '"}')
+    if not text.endswith('"}]'):
+        candidates.append(text + '"}]')
+    if text.endswith('"'):
+        candidates.append(text + ']}')
+    for c in candidates:
+        try:
+            return json.loads(_TRAILING_COMMA_RE.sub(r"\1", c))
+        except json.JSONDecodeError:
+            continue
+    return None
+
+
 def _parse_json_response(raw: str) -> list[dict]:
     text = _fix_json(raw)
     try:
@@ -176,7 +197,13 @@ def _parse_json_response(raw: str) -> list[dict]:
             try:
                 return json.loads(text)
             except json.JSONDecodeError:
-                pass
+                repaired = _repair_json(text)
+                if repaired is not None:
+                    return repaired
+        else:
+            repaired = _repair_json(text)
+            if repaired is not None:
+                return repaired
         print(f"--- FAILED JSON ---\n{text[:1500]}\n--- END ---", file=sys.stderr, flush=True)
         raise
 
