@@ -11,7 +11,7 @@ services:
       retries: 6
       start_period: 120s
     entrypoint: >
-      sh -c "ollama serve &
+      sh -c "ollama serve > /dev/null 2>&1 &
       sleep 10 &&
       ollama pull phi4-mini &&
       wait"
