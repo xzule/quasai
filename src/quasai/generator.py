@@ -1,3 +1,4 @@
+import asyncio
 import json
 import re
 import sys
@@ -93,13 +94,14 @@ class OllamaProvider(LLMProvider):
                     cases = await self._generate_chunk(chunk)
                     all_cases.extend(cases)
                     break
-                except json.JSONDecodeError:
+                except (json.JSONDecodeError, httpx.HTTPError) as exc:
                     if attempt == 0:
                         if progress:
-                            progress(f"Retry: {chunk.label}")
+                            progress(f"Retry: {chunk.label} ({type(exc).__name__})")
+                        await asyncio.sleep(10)
                     else:
                         if progress:
-                            progress(f"Skipped: {chunk.label}")
+                            progress(f"Skipped: {chunk.label} ({type(exc).__name__})")
         for j, tc in enumerate(all_cases, 1):
             tc.id = f"TC-{j:03d}"
         return all_cases
