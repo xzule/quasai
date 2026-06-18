@@ -18,8 +18,8 @@ if [ ! -f "$INPUT_FILE" ]; then
     exit 1
 fi
 
-docker compose -p quasai up -d ollama --progress plain
+docker compose -p quasai up -d ollama
 
 docker compose -p quasai run --rm --entrypoint quasai app "/input/$1"
 
-docker compose -p quasai down --progress plain
+docker compose -p quasai down

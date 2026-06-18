@@ -18,8 +18,8 @@ if (-not (Test-Path -LiteralPath $InputPath)) {
     exit 1
 }
 
-docker compose -p quasai up -d ollama --progress plain
+docker compose -p quasai up -d ollama
 
 docker compose -p quasai run --rm --entrypoint quasai app /input/$FileName
 
-docker compose -p quasai down --progress plain
+docker compose -p quasai down
