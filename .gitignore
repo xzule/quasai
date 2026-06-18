@@ -8,5 +8,13 @@ venv/
 dist/
 build/
 
+# docs & specs
+Spec.md
+Agents.md
+docs/
+
+# tests
+tests/
+
 # editor
 .obsidian/
