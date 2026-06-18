@@ -20,31 +20,31 @@ def generate(
 ) -> None:
     in_path = Path(input)
     if not in_path.exists():
-        print("Файл не найден", file=sys.stderr)
+        print("Файл не найден", file=sys.stderr, flush=True)
         raise typer.Exit(code=1)
 
     out_path = Path(output) if output else in_path.with_suffix(".json")
 
-    print("Парсинг требований")
+    print("Парсинг требований", flush=True)
     try:
         requirements = parse_markdown(str(in_path))
     except ValueError as e:
-        print(e, file=sys.stderr)
+        print(e, file=sys.stderr, flush=True)
         raise typer.Exit(code=1)
 
     provider = OllamaProvider()
     try:
         cases = asyncio.run(generate_cases(requirements, provider, progress=lambda msg: print(msg, flush=True)))
     except (httpx.ConnectError, httpx.TimeoutException, httpx.ReadTimeout):
-        print("Ошибка подключения к LLM", file=sys.stderr)
+        print("Ошибка подключения к LLM", file=sys.stderr, flush=True)
         raise typer.Exit(code=1)
     except httpx.HTTPStatusError as e:
-        print(f"Ошибка LLM (HTTP {e.response.status_code})", file=sys.stderr)
+        print(f"Ошибка LLM (HTTP {e.response.status_code})", file=sys.stderr, flush=True)
         raise typer.Exit(code=1)
     except json.JSONDecodeError as e:
-        print(f"Ошибка разбора ответа LLM: {e}", file=sys.stderr)
+        print(f"Ошибка разбора ответа LLM: {e}", file=sys.stderr, flush=True)
         raise typer.Exit(code=1)
 
-    print("Сохранение результата")
+    print("Сохранение результата", flush=True)
     to_json(cases, str(out_path))
-    print(f"Результат сохранён в {out_path}")
+    print(f"Результат сохранён в {out_path}", flush=True)
