@@ -109,6 +109,8 @@ class OllamaProvider(LLMProvider):
         prompt = (
             "Generate a JSON array of test cases.\n"
             f"One short test case per requirement ({chunk.item_count} total).\n"
+            "Write in the same language as the requirements below. "
+            "Keep technical terms (e.g. API, login, database, UI) in English.\n"
             "Each case is an object with fields: id, title, preconditions, "
             "steps (array of strings), expectedResult (string).\n"
             "Example: {\"id\":\"TC-001\",\"title\":\"Login\","
