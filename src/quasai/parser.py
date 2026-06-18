@@ -50,6 +50,13 @@ def parse_markdown(path: str) -> Requirements:
     return Requirements(title=title, sections=sections)
 
 
+_ITEM_RE = re.compile(r"^\s*\d+(\.\d+)+\s", re.MULTILINE)
+
+
+def count_items(content: str) -> int:
+    return len(_ITEM_RE.findall(content))
+
+
 def _flush_text(
     section: Section | None,
     subsection: Section | None,

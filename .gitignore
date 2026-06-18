@@ -13,5 +13,9 @@ venv/
 dist/
 build/
 
+# runtime
+input/
+output/
+
 # editor
 .obsidian/

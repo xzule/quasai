@@ -21,4 +21,3 @@ class TestCase:
     preconditions: str = ""
     steps: list[str] = field(default_factory=list)
     expected_result: str = ""
-    tags: list[str] = field(default_factory=list)

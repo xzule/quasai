@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from quasai.parser import parse_markdown
+from quasai.parser import count_items, parse_markdown
 from quasai.types import Requirements, Section
 
 
@@ -71,3 +71,20 @@ def test_parse_no_headings(tmp_path: Path) -> None:
 
     with pytest.raises(ValueError, match="Файл не содержит требований"):
         parse_markdown(str(path))
+
+
+def test_count_items() -> None:
+    assert count_items("1.1 (P0) First.\n1.2 (P0) Second.\n1.3 (P0) Third.") == 3
+
+
+def test_count_items_empty() -> None:
+    assert count_items("") == 0
+
+
+def test_count_items_no_numbered() -> None:
+    assert count_items("Just text.") == 0
+
+
+def test_count_items_multi_level() -> None:
+    content = "4.1.1 (P1) Sub-item.\n6.2.1 (P0) Deep.\n8.1 User scenario."
+    assert count_items(content) == 3

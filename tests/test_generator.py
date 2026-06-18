@@ -1,9 +1,7 @@
-import json
-
 import httpx
 import pytest
 
-from quasai.generator import LLMProvider, OllamaProvider, generate
+from quasai.generator import Chunk, LLMProvider, OllamaProvider, generate
 from quasai.types import Requirements, Section, TestCase
 
 
@@ -11,7 +9,9 @@ class MockProvider(LLMProvider):
     def __init__(self, result: list[TestCase] | None = None) -> None:
         self._result = result or []
 
-    async def generate(self, requirements: Requirements) -> list[TestCase]:
+    async def generate(
+        self, requirements: Requirements, progress=None
+    ) -> list[TestCase]:
         return self._result
 
 
@@ -54,8 +54,13 @@ async def test_ollama_provider_bad_json(httpx_mock) -> None:
         url="http://ollama:11434/api/generate",
         json={"response": "not json at all"},
     )
+    httpx_mock.add_response(
+        url="http://ollama:11434/api/generate",
+        json={"response": "not json at all"},
+    )
     provider = OllamaProvider(model="phi4-mini")
     req = Requirements(title="Test")
 
-    with pytest.raises(json.JSONDecodeError):
-        await provider.generate(req)
+    result = await provider.generate(req)
+
+    assert result == []

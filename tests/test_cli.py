@@ -96,5 +96,4 @@ def test_generate_progress_messages(tmp_path: Path) -> None:
 
     assert result.exit_code == 0
     assert "Парсинг требований" in result.stdout
-    assert "Генерация box-сценариев" in result.stdout
-    assert "Сохранение результата" in result.stdout
+    assert "Результат сохранён" in result.stdout

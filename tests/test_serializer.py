@@ -15,7 +15,6 @@ def test_to_json_basic(tmp_path: Path) -> None:
             preconditions="User is on login page",
             steps=["Enter username", "Enter password", "Click Login"],
             expected_result="User is redirected to dashboard",
-            tags=["positive", "smoke"],
         ),
         TestCase(
             id="TC-002",
@@ -23,7 +22,6 @@ def test_to_json_basic(tmp_path: Path) -> None:
             preconditions="User is on login page",
             steps=["Enter username", "Enter wrong password", "Click Login"],
             expected_result="Error message is displayed",
-            tags=["negative"],
         ),
     ]
     path = tmp_path / "out.json"
@@ -37,7 +35,6 @@ def test_to_json_basic(tmp_path: Path) -> None:
     assert data[0]["id"] == "TC-001"
     assert data[0]["title"] == "Login with valid credentials"
     assert data[0]["steps"] == ["Enter username", "Enter password", "Click Login"]
-    assert data[0]["tags"] == ["positive", "smoke"]
 
 
 def test_to_json_empty(tmp_path: Path) -> None:
@@ -59,7 +56,6 @@ def test_round_trip(tmp_path: Path) -> None:
             preconditions="None",
             steps=["Step 1"],
             expected_result="OK",
-            tags=["a"],
         ),
         TestCase(
             id="TC-002",
@@ -67,7 +63,6 @@ def test_round_trip(tmp_path: Path) -> None:
             preconditions="Logged in",
             steps=["Step 1", "Step 2"],
             expected_result="Done",
-            tags=[],
         ),
     ]
     path = tmp_path / "roundtrip.json"
@@ -82,7 +77,6 @@ def test_round_trip(tmp_path: Path) -> None:
         assert r.preconditions == o.preconditions
         assert r.steps == o.steps
         assert r.expected_result == o.expected_result
-        assert r.tags == o.tags
 
 
 def test_to_json_exceeds_10mb(tmp_path: Path) -> None:
@@ -93,7 +87,6 @@ def test_to_json_exceeds_10mb(tmp_path: Path) -> None:
             preconditions="Pre " * 2000,
             steps=["Step " * 2000],
             expected_result="Res " * 2000,
-            tags=["tag"] * 50,
         )
         for i in range(500)
     ]

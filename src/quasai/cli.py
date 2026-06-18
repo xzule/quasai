@@ -32,15 +32,17 @@ def generate(
         print(e, file=sys.stderr)
         raise typer.Exit(code=1)
 
-    print("Генерация box-сценариев")
     provider = OllamaProvider()
     try:
-        cases = asyncio.run(generate_cases(requirements, provider))
-    except (httpx.ConnectError, httpx.TimeoutException):
+        cases = asyncio.run(generate_cases(requirements, provider, progress=lambda msg: print(msg, flush=True)))
+    except (httpx.ConnectError, httpx.TimeoutException, httpx.ReadTimeout):
         print("Ошибка подключения к LLM", file=sys.stderr)
         raise typer.Exit(code=1)
-    except json.JSONDecodeError:
-        print("Ошибка разбора ответа LLM", file=sys.stderr)
+    except httpx.HTTPStatusError as e:
+        print(f"Ошибка LLM (HTTP {e.response.status_code})", file=sys.stderr)
+        raise typer.Exit(code=1)
+    except json.JSONDecodeError as e:
+        print(f"Ошибка разбора ответа LLM: {e}", file=sys.stderr)
         raise typer.Exit(code=1)
 
     print("Сохранение результата")

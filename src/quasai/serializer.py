@@ -14,7 +14,6 @@ def _to_dict(tc: TestCase) -> dict:
         "preconditions": tc.preconditions,
         "steps": tc.steps,
         "expectedResult": tc.expected_result,
-        "tags": tc.tags,
     }
 
 
@@ -25,7 +24,6 @@ def _from_dict(d: dict) -> TestCase:
         preconditions=d.get("preconditions", ""),
         steps=d.get("steps", []),
         expected_result=d.get("expectedResult", ""),
-        tags=d.get("tags", []),
     )
 
 
