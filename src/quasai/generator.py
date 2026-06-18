@@ -105,11 +105,6 @@ class OllamaProvider(LLMProvider):
 
     async def _generate_chunk(self, chunk: Chunk) -> list[TestCase]:
         prompt = (
-            "<|system|>\n"
-            "Requirements are in Russian. Write ALL field values in Russian. "
-            "Only JSON field names and technical terms stay in English.\n"
-            "<|end|>\n"
-            "<|user|>\n"
             "Generate test cases using ISTQB test design techniques:\n"
             "- Equivalence Partitioning: cover valid (positive) and invalid (negative) equivalence classes\n"
             "- Boundary Value Analysis: when numeric ranges or limits exist, "
@@ -117,18 +112,16 @@ class OllamaProvider(LLMProvider):
             "- State Transition Testing: when requirements describe states, "
             "statuses, or workflows, test valid and invalid state transitions\n"
             "\n"
-            'Example:\n'
-            '{"id":"TC-001",'
-            '"title":"Login with password at minimum length",'
-            '"preconditions":"User is registered, minimum password length is 8 characters",'
-            '"steps":["Enter username","Enter 8-character password","Click Login"],'
-            '"expectedResult":"User is logged in"}\n'
+            'Each case: {"id":"TC-001","title":"...","preconditions":"...",'
+            '"steps":["..."],"expectedResult":"..."}\n'
             "\n"
             "Do not close the object before all fields are written.\n"
             "\n"
+            "The requirements below are in Russian. "
+            "Write ALL field values (title, preconditions, steps, expectedResult) in RUSSIAN. "
+            "Only JSON field names and technical terms stay in English.\n"
+            "\n"
             f"Requirements: {chunk.prompt}\n"
-            "<|end|>\n"
-            "<|assistant|>\n"
         )
         async with httpx.AsyncClient(timeout=300) as client:
             response = await client.post(
