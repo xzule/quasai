@@ -164,7 +164,10 @@ def _parse_json_response(raw: str) -> list[dict]:
         m = _JSON_ARRAY_RE.search(text)
         if m:
             text = _fix_json(m.group(0))
-            return json.loads(text)
+            try:
+                return json.loads(text)
+            except json.JSONDecodeError:
+                pass
         print(f"--- FAILED JSON ---\n{text[:1500]}\n--- END ---", file=sys.stderr, flush=True)
         raise
 
