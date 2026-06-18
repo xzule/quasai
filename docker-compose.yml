@@ -5,6 +5,9 @@ services:
       - "11434:11434"
     volumes:
       - ollama_data:/root/.ollama
+    environment:
+      - GIN_MODE=release
+      - OLLAMA_DEBUG=ERROR
     healthcheck:
       test: ["CMD", "sh", "-c", "ollama list 2>&1 | grep -q phi4-mini"]
       interval: 30s
