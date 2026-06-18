@@ -1,5 +1,6 @@
 import json
 import re
+import sys
 from collections.abc import Callable
 from dataclasses import dataclass
 
@@ -164,6 +165,7 @@ def _parse_json_response(raw: str) -> list[dict]:
         if m:
             text = _fix_json(m.group(0))
             return json.loads(text)
+        print(f"--- FAILED JSON ---\n{text[:1500]}\n--- END ---", file=sys.stderr, flush=True)
         raise
 
 
