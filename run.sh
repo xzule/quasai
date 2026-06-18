@@ -18,6 +18,8 @@ if [ ! -f "$INPUT_FILE" ]; then
     exit 1
 fi
 
+docker compose -p quasai run --rm ollama ollama pull phi4-mini
+
 docker compose -p quasai up -d ollama
 
 docker compose -p quasai run --rm --entrypoint quasai app "/input/$1"

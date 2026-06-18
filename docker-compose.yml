@@ -3,6 +3,8 @@ services:
     image: ollama/ollama
     ports:
       - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
     healthcheck:
       test: ["CMD", "sh", "-c", "ollama list 2>&1 | grep -q phi4-mini"]
       interval: 30s
@@ -23,3 +25,6 @@ services:
       - ./input:/input
       - ./output:/output
     entrypoint: ["tail", "-f", "/dev/null"]
+
+volumes:
+  ollama_data:
