@@ -15,15 +15,14 @@ cd quasai
 
 ### Generate test cases
 
-```bash
-# Linux / macOS
-./run.sh requirements.md
+Place your `.md` file in the `input/` directory, then run:
 
-# Windows PowerShell
-.\run.ps1 requirements.md
+```bash
+./run.sh        # Linux / macOS
+.\run.ps1       # Windows PowerShell
 ```
 
-Place your `.md` file in the `input/` directory first. The script starts the LLM, runs generation, and stops all services automatically. Results are saved to `./output/{filename}.json` and `./output/{filename}.csv`.
+The script will prompt for the file name. Press `Ctrl+C` at any time to stop and clean up all containers. Results are saved to `./output/{filename}.json` and `./output/{filename}.csv`.
 
 ## Input format
 
@@ -41,6 +40,8 @@ Details.
 
 ## Output format
 
+### JSON
+
 ```json
 [
   {
@@ -51,4 +52,14 @@ Details.
     "expectedResult": "Expected result"
   }
 ]
+```
+
+### CSV
+
+Columns: `id; title; preconditions; step1; step2; ...; stepN; expectedResult`.
+Columns `step1` to `stepN` adapt to the maximum number of steps across all test cases.
+
+```csv
+id;title;preconditions;step1;step2;expectedResult
+TC-001;Test case title;Preconditions;Step 1;Step 2;Expected result
 ```
