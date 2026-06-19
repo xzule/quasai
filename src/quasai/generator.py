@@ -166,27 +166,6 @@ def _fix_json(text: str) -> str:
     return text.strip()
 
 
-def _repair_json(text: str) -> list[dict] | None:
-    """Try to repair truncated JSON by closing unclosed string, object, array."""
-    candidates = [text]
-    if not text.endswith("]"):
-        candidates.append(text + "]")
-    if not text.endswith('"]'):
-        candidates.append(text + '"]')
-    if not text.endswith('"}'):
-        candidates.append(text + '"}')
-    if not text.endswith('"}]'):
-        candidates.append(text + '"}]')
-    if text.endswith('"'):
-        candidates.append(text + ']}')
-    for c in candidates:
-        try:
-            return json.loads(_TRAILING_COMMA_RE.sub(r"\1", c))
-        except json.JSONDecodeError:
-            continue
-    return None
-
-
 def _extract_array(text: str) -> str:
     """Extract from first '[' to end, ignoring preamble."""
     idx = text.find("[")
@@ -195,27 +174,52 @@ def _extract_array(text: str) -> str:
     return text
 
 
+def _extract_complete_objects(text: str) -> list[str]:
+    """Extract substrings of complete JSON objects { ... }."""
+    objs: list[str] = []
+    depth = 0
+    start = -1
+    for i, ch in enumerate(text):
+        if ch == "{":
+            if depth == 0:
+                start = i
+            depth += 1
+        elif ch == "}":
+            depth -= 1
+            if depth == 0 and start >= 0:
+                objs.append(text[start:i+1])
+                start = -1
+    return objs
+
+
 def _parse_json_response(raw: str) -> list[dict]:
     text = _fix_json(raw)
+    # Try full-parse first
     try:
         return json.loads(text)
     except json.JSONDecodeError:
-        m = _JSON_ARRAY_RE.search(text)
-        if m:
-            text = _fix_json(m.group(0))
-            try:
-                return json.loads(text)
-            except json.JSONDecodeError:
-                repaired = _repair_json(text)
-                if repaired is not None:
-                    return repaired
-        # No complete array found — extract from '[' onward and attempt repair
-        text = _extract_array(text)
-        repaired = _repair_json(text)
-        if repaired is not None:
-            return repaired
-        print(f"--- FAILED JSON ---\n{text[:1500]}\n--- END ---", file=sys.stderr, flush=True)
-        raise
+        pass
+    # Try extracting the array block with [ ... ]
+    m = _JSON_ARRAY_RE.search(text)
+    if m:
+        try:
+            return json.loads(_fix_json(m.group(0)))
+        except json.JSONDecodeError:
+            pass
+    # Fallback: extract individual complete objects
+    text = _extract_array(text)
+    items: list[dict] = []
+    for obj_str in _extract_complete_objects(text):
+        try:
+            item = json.loads(obj_str)
+            if "id" in item and "title" in item and "expectedResult" in item:
+                items.append(item)
+        except json.JSONDecodeError:
+            pass
+    if items:
+        return items
+    print(f"--- FAILED JSON ---\n{text[:1500]}\n--- END ---", file=sys.stderr, flush=True)
+    raise json.JSONDecodeError("No valid objects found", text, 0)
 
 
 def _to_str(value: object) -> str:
