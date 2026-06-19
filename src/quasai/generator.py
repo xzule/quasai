@@ -108,6 +108,9 @@ class OllamaProvider(LLMProvider):
 
     async def _generate_chunk(self, chunk: Chunk) -> list[TestCase]:
         prompt = (
+            "<|user|>\n"
+            "Write in English only.\n"
+            "\n"
             "Generate test cases using ISTQB test design techniques:\n"
             "- Equivalence Partitioning: cover valid (positive) and invalid (negative) equivalence classes\n"
             "- Boundary Value Analysis: when numeric ranges or limits exist, "
@@ -131,22 +134,24 @@ class OllamaProvider(LLMProvider):
             "\n"
             "Do not close the object before all fields are written.\n"
             "\n"
-            "Requirements are provided below. Write ALL field values in English.\n"
-            "\n"
             f"Requirements: {chunk.prompt}\n"
+            "\n"
+            "Write in English only.\n"
+            "<|end|>"
         )
         async with httpx.AsyncClient(timeout=600) as client:
-            response = await client.post(
+            async with client.stream(
+                "POST",
                 f"{self._base_url}/api/generate",
                 json={
                     "model": self._model,
                     "prompt": prompt,
-                    "stream": False,
+                    "stream": True,
                     "options": {"temperature": 0.0},
                 },
-            )
-        response.raise_for_status()
-        raw = response.json()["response"]
+            ) as resp:
+                lines = [l async for l in resp.aiter_lines() if l]
+            raw = "".join(json.loads(ch)["response"] for ch in lines)
         data = _parse_json_response(raw)
         result = [_to_testcase(item) for item in data]
         return [tc for tc in result if tc is not None]
