@@ -109,7 +109,8 @@ class OllamaProvider(LLMProvider):
     async def _generate_chunk(self, chunk: Chunk) -> list[TestCase]:
         prompt = (
             "<|user|>\n"
-            "Write in English only.\n"
+            "Write ONLY in English. Use only Latin letters a-z A-Z. "
+            "Do NOT use Russian, Cyrillic, or any non-Latin characters.\n"
             "\n"
             "Generate test cases using ISTQB test design techniques:\n"
             "- Equivalence Partitioning: cover valid (positive) and invalid (negative) equivalence classes\n"
@@ -136,7 +137,8 @@ class OllamaProvider(LLMProvider):
             "\n"
             f"Requirements: {chunk.prompt}\n"
             "\n"
-            "Write in English only.\n"
+            "Write ONLY in English. Use only Latin letters a-z A-Z. "
+            "Do NOT use Russian, Cyrillic, or any non-Latin characters.\n"
             "<|end|>"
         )
         async with httpx.AsyncClient(timeout=600) as client:
@@ -252,6 +254,14 @@ def _to_str_list(value: object) -> list[str]:
 def _to_testcase(item: dict) -> TestCase | None:
     if not all(k in item for k in ("id", "title", "expectedResult")):
         return None
+    # Reject any field containing non-Latin characters
+    for val in item.values():
+        if isinstance(val, str) and any(ord(c) > 127 for c in val):
+            return None
+        if isinstance(val, list):
+            for v in val:
+                if isinstance(v, str) and any(ord(c) > 127 for c in v):
+                    return None
     return TestCase(
         id=item["id"],
         title=item["title"],
