@@ -164,7 +164,7 @@ class OllamaProvider(LLMProvider):
             '"preconditions":"Password policy requires 8-20 characters, '
             "alphanumeric; user is not registered.\","
             '"steps":["Enter username \'newuser\'",'
-            ""\"Enter password 'Pass1234' (exactly 8 characters)\",\"Click Register\"],"
+            "\"Enter password 'Pass1234' (exactly 8 characters)\",\"Click Register\"],"
             '"expectedResult":"Account created; user is logged in, '
             "state changes to 'active'; confirmation email sent.\"}\n"
             "\n"
