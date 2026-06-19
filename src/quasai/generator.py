@@ -2,6 +2,7 @@ import asyncio
 import json
 import re
 import sys
+import time
 from collections.abc import Callable
 from dataclasses import dataclass
 
@@ -84,6 +85,7 @@ class OllamaProvider(LLMProvider):
         requirements: Requirements,
         progress: Callable[[str], None] | None = None,
     ) -> list[TestCase]:
+        t0 = time.monotonic()
         chunks = self._build_chunks(requirements)
         all_cases: list[TestCase] = []
         for i, chunk in enumerate(chunks, 1):
@@ -104,9 +106,12 @@ class OllamaProvider(LLMProvider):
                             progress(f"Skipped: {chunk.label} ({type(exc).__name__})")
         for j, tc in enumerate(all_cases, 1):
             tc.id = f"TC-{j:03d}"
+        t1 = time.monotonic()
+        print(f"--- TOTAL: {t1-t0:.0f}s, {len(all_cases)} cases ---", flush=True)
         return all_cases
 
     async def _generate_chunk(self, chunk: Chunk) -> list[TestCase]:
+        t0 = time.monotonic()
         prompt = (
             "<|user|>\n"
             "Write ONLY in English. Use only Latin letters a-z A-Z. "
@@ -156,7 +161,56 @@ class OllamaProvider(LLMProvider):
             raw = "".join(json.loads(ch)["response"] for ch in lines)
         data = _parse_json_response(raw)
         result = [_to_testcase(item) for item in data]
-        return [tc for tc in result if tc is not None]
+        result = [tc for tc in result if tc is not None]
+
+        dirty = [tc for tc in result if _has_cyrillic(tc)]
+        if dirty:
+            clean = [tc for tc in result if not _has_cyrillic(tc)]
+            sanitized = await self._sanitize_objects(dirty)
+            result = clean + sanitized
+
+        t1 = time.monotonic()
+        print(f"--- Chunk '{chunk.label}' done in {t1-t0:.0f}s "
+              f"({len(result)} cases, {len(dirty)} sanitized) ---", flush=True)
+        return result
+
+    async def _sanitize_objects(self, cases: list[TestCase]) -> list[TestCase]:
+        obj_list = [
+            {"id": c.id, "title": c.title, "preconditions": c.preconditions,
+             "steps": c.steps, "expectedResult": c.expected_result}
+            for c in cases
+        ]
+        prompt = (
+            "<|user|>\n"
+            "Replace any non-Latin characters with Latin equivalents "
+            "in the following JSON array. Keep the JSON structure identical.\n"
+            "\n"
+            f"{json.dumps(obj_list, ensure_ascii=False)}\n"
+            "\n"
+            "Output ONLY the JSON array.\n"
+            "<|end|>"
+        )
+        async with httpx.AsyncClient(timeout=300) as client:
+            async with client.stream(
+                "POST",
+                f"{self._base_url}/api/generate",
+                json={
+                    "model": self._model,
+                    "prompt": prompt,
+                    "stream": True,
+                    "options": {"temperature": 0.0},
+                },
+            ) as resp:
+                lines = [l async for l in resp.aiter_lines() if l]
+        raw = "".join(json.loads(ch)["response"] for ch in lines)
+        try:
+            data = _parse_json_response(raw)
+            translated = [to for item in data if (to := _to_testcase(item)) is not None]
+            if translated:
+                return translated
+        except json.JSONDecodeError:
+            pass
+        return cases  # fallback — keep original
 
 
 _TRAILING_COMMA_RE = re.compile(r",\s*([}\]])")
@@ -251,17 +305,19 @@ def _to_str_list(value: object) -> list[str]:
     return result
 
 
+def _has_cyrillic(tc: TestCase) -> bool:
+    for val in (tc.id, tc.title, tc.preconditions, tc.expected_result):
+        if any(ord(c) > 127 for c in val):
+            return True
+    for step in tc.steps:
+        if any(ord(c) > 127 for c in step):
+            return True
+    return False
+
+
 def _to_testcase(item: dict) -> TestCase | None:
     if not all(k in item for k in ("id", "title", "expectedResult")):
         return None
-    # Reject any field containing non-Latin characters
-    for val in item.values():
-        if isinstance(val, str) and any(ord(c) > 127 for c in val):
-            return None
-        if isinstance(val, list):
-            for v in val:
-                if isinstance(v, str) and any(ord(c) > 127 for c in v):
-                    return None
     return TestCase(
         id=item["id"],
         title=item["title"],
