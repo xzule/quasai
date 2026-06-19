@@ -50,7 +50,10 @@ def generate(
 
     print("Saving results", flush=True)
     to_json(cases, str(out_json))
-    to_csv(cases, str(out_csv))
+    try:
+        to_csv(cases, str(out_csv))
+    except PermissionError:
+        print(f"Warning: could not write {out_csv.name}", file=sys.stderr, flush=True)
     print("Results saved in:", flush=True)
     print(f"  ./output/{stem}.json", flush=True)
     print(f"  ./output/{stem}.csv", flush=True)
