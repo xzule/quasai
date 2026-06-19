@@ -114,8 +114,14 @@ class OllamaProvider(LLMProvider):
         t0 = time.monotonic()
         prompt = (
             "<|user|>\n"
-            "Write ONLY in English. Use only Latin letters a-z A-Z. "
-            "Do NOT use Russian, Cyrillic, or any non-Latin characters.\n"
+            "ABSOLUTE LANGUAGE RULE (highest priority, applies to all text values in JSON):\n"
+            "- Your entire output must be in English.\n"
+            "- No Cyrillic characters are allowed under any circumstances.\n"
+            '- This includes words that look like transliterations (e.g., "юзер", "логин", "пароль"). '
+            'Translate them to English: "user", "login", "password".\n'
+            "- Only standard JSON keys and universally recognized English technical abbreviations "
+            '(like "ID", "URL", "API") may remain untranslated.\n'
+            "- Never copy Russian words from the requirements; always translate them into English.\n"
             "\n"
             "Generate test cases using ISTQB test design techniques:\n"
             "- Equivalence Partitioning: cover valid (positive) and invalid (negative) equivalence classes\n"
@@ -133,7 +139,7 @@ class OllamaProvider(LLMProvider):
             "\n"
             'Example:\n'
             '{"id":"TC-001",'
-            '"title":"Login with password at minimum length",'
+            '"title":"User logs in with password at minimum length",'
             '"preconditions":"User is registered, minimum password length is 8 characters",'
             '"steps":["Enter username","Enter 8-character password","Click Login"],'
             '"expectedResult":"User is logged in"}\n'
@@ -142,8 +148,9 @@ class OllamaProvider(LLMProvider):
             "\n"
             f"Requirements: {chunk.prompt}\n"
             "\n"
-            "Write ONLY in English. Use only Latin letters a-z A-Z. "
-            "Do NOT use Russian, Cyrillic, or any non-Latin characters.\n"
+            "REMINDER: Output English only. "
+            'Translate all Russian words, including "юзер" → "user". '
+            "No Cyrillic letters allowed.\n"
             "<|end|>"
         )
         async with httpx.AsyncClient(timeout=600) as client:
