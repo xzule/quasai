@@ -164,14 +164,14 @@ class OllamaProvider(LLMProvider):
         result = [tc for tc in result if tc is not None]
 
         dirty = [tc for tc in result if _has_cyrillic(tc)]
-        if dirty:
-            clean = [tc for tc in result if not _has_cyrillic(tc)]
-            sanitized = await self._sanitize_objects(dirty)
-            result = clean + sanitized
+        # if dirty:
+        #     clean = [tc for tc in result if not _has_cyrillic(tc)]
+        #     sanitized = await self._sanitize_objects(dirty)
+        #     result = clean + sanitized
 
         t1 = time.monotonic()
         print(f"--- Chunk '{chunk.label}' done in {t1-t0:.0f}s "
-              f"({len(result)} cases, {len(dirty)} sanitized) ---", flush=True)
+              f"({len(result)} cases, {len(dirty)} dirty) ---", flush=True)
         return result
 
     async def _sanitize_objects(self, cases: list[TestCase]) -> list[TestCase]:
