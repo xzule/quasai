@@ -8,6 +8,7 @@ services:
     environment:
       - GIN_MODE=release
       - OLLAMA_DEBUG=ERROR
+      - OLLAMA_NUM_THREADS=${OLLAMA_NUM_THREADS}
     healthcheck:
       test: ["CMD", "sh", "-c", "ollama list 2>&1 | grep -q phi4-mini"]
       interval: 30s

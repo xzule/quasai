@@ -177,7 +177,7 @@ class OllamaProvider(LLMProvider):
             "Use only standard Latin alphabet (a-z, A-Z).\n"
             "<|end|>"
         )
-        async with httpx.AsyncClient(timeout=600) as client:
+        async with httpx.AsyncClient(timeout=None) as client:
             async with client.stream(
                 "POST",
                 f"{self._base_url}/api/generate",
