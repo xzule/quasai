@@ -116,19 +116,40 @@ class OllamaProvider(LLMProvider):
             "<|user|>\n"
             "ABSOLUTE LANGUAGE RULE (highest priority, applies to all text values in JSON):\n"
             "- Your entire output must be in English.\n"
-            "- No Cyrillic characters are allowed under any circumstances.\n"
-            '- This includes words that look like transliterations (e.g., "юзер", "логин", "пароль"). '
-            'Translate them to English: "user", "login", "password".\n'
-            "- Only standard JSON keys and universally recognized English technical abbreviations "
-            '(like "ID", "URL", "API") may remain untranslated.\n'
-            "- Never copy Russian words from the requirements; always translate them into English.\n"
+            "- Use only standard Latin alphabet (a-z, A-Z) and common punctuation.\n"
+            '- Words that look like transliterations from other languages (e.g., "юзер") '
+            'must be replaced with proper English (e.g., "user").\n'
+            "- Never copy words from the requirements in their original language; "
+            "always translate them into English.\n"
             "\n"
             "Generate test cases using ISTQB test design techniques:\n"
-            "- Equivalence Partitioning: cover valid (positive) and invalid (negative) equivalence classes\n"
-            "- Boundary Value Analysis: when numeric ranges or limits exist, "
-            "test boundary values (min, just below min, max, just above max)\n"
-            "- State Transition Testing: when requirements describe states, "
-            "statuses, or workflows, test valid and invalid state transitions\n"
+            "- Equivalence Partitioning: for each input or condition in the requirements, "
+            "define valid and invalid equivalence classes and test at least one "
+            "representative value from each class.\n"
+            "- Boundary Value Analysis: scan the requirements for any numeric or temporal "
+            "limits (e.g., maximum length, timeouts, credit caps, intervals, cooldown "
+            "periods). For each such limit, generate tests for the exact boundary value, "
+            "one just below, and one just above (if applicable). "
+            "If the limit is inclusive, test both the boundary and the value immediately beyond it.\n"
+            "- State Transition Testing: identify all explicit and implicit states "
+            "(user roles, system modes, processing statuses, feature availability). "
+            "Test both valid and invalid transitions, including unexpected events "
+            "(errors, restarts, timeouts) \u2013 verify that no state leaves the user "
+            "permanently blocked.\n"
+            "\n"
+            "Coverage: ensure every functional requirement (each bullet point or \u201cshall\u201d "
+            "statement) is covered by at least one test case. "
+            "If a requirement contains multiple distinct conditions (e.g., positive and negative cases), "
+            "generate separate tests for each. "
+            "Avoid generating redundant tests that verify essentially the same behavior with only trivial differences.\n"
+            "\n"
+            "Test case quality:\n"
+            "- preconditions must be specific and measurable "
+            '(e.g., "User has 0 credits", not "User has insufficient credits").\n'
+            "- steps must be atomic actions; do not combine multiple actions into one step.\n"
+            "- expectedResult must be verifiable "
+            "(e.g., exact error message text or a clear state change), "
+            'avoid vague terms like "friendly message" without specifying the actual outcome.\n'
             "\n"
             "Output ONLY a JSON array of flat objects. "
             "Each object MUST have exactly these 5 fields: "
@@ -139,18 +160,21 @@ class OllamaProvider(LLMProvider):
             "\n"
             'Example:\n'
             '{"id":"TC-001",'
-            '"title":"User logs in with password at minimum length",'
-            '"preconditions":"User is registered, minimum password length is 8 characters",'
-            '"steps":["Enter username","Enter 8-character password","Click Login"],'
-            '"expectedResult":"User is logged in"}\n'
+            '"title":"Register with password at minimum valid length",'
+            '"preconditions":"Password policy requires 8-20 characters, '
+            "alphanumeric; user is not registered.\","
+            '"steps":["Enter username \'newuser\'",'
+            ""\"Enter password 'Pass1234' (exactly 8 characters)\",\"Click Register\"],"
+            '"expectedResult":"Account created; user is logged in, '
+            "state changes to 'active'; confirmation email sent.\"}\n"
             "\n"
             "Do not close the object before all fields are written.\n"
             "\n"
             f"Requirements: {chunk.prompt}\n"
             "\n"
             "REMINDER: Output English only. "
-            'Translate all Russian words, including "юзер" → "user". '
-            "No Cyrillic letters allowed.\n"
+            'Translate all non-English words (e.g., "юзер" → "user"). '
+            "Use only standard Latin alphabet (a-z, A-Z).\n"
             "<|end|>"
         )
         async with httpx.AsyncClient(timeout=600) as client:
