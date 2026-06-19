@@ -148,7 +148,8 @@ class OllamaProvider(LLMProvider):
         response.raise_for_status()
         raw = response.json()["response"]
         data = _parse_json_response(raw)
-        return [_to_testcase(item) for item in data]
+        result = [_to_testcase(item) for item in data]
+        return [tc for tc in result if tc is not None]
 
 
 _TRAILING_COMMA_RE = re.compile(r",\s*([}\]])")
@@ -186,6 +187,14 @@ def _repair_json(text: str) -> list[dict] | None:
     return None
 
 
+def _extract_array(text: str) -> str:
+    """Extract from first '[' to end, ignoring preamble."""
+    idx = text.find("[")
+    if idx >= 0:
+        return text[idx:]
+    return text
+
+
 def _parse_json_response(raw: str) -> list[dict]:
     text = _fix_json(raw)
     try:
@@ -200,10 +209,11 @@ def _parse_json_response(raw: str) -> list[dict]:
                 repaired = _repair_json(text)
                 if repaired is not None:
                     return repaired
-        else:
-            repaired = _repair_json(text)
-            if repaired is not None:
-                return repaired
+        # No complete array found — extract from '[' onward and attempt repair
+        text = _extract_array(text)
+        repaired = _repair_json(text)
+        if repaired is not None:
+            return repaired
         print(f"--- FAILED JSON ---\n{text[:1500]}\n--- END ---", file=sys.stderr, flush=True)
         raise
 
@@ -230,7 +240,9 @@ def _to_str_list(value: object) -> list[str]:
     return result
 
 
-def _to_testcase(item: dict) -> TestCase:
+def _to_testcase(item: dict) -> TestCase | None:
+    if not all(k in item for k in ("id", "title", "expectedResult")):
+        return None
     return TestCase(
         id=item["id"],
         title=item["title"],
