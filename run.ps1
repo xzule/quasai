@@ -24,6 +24,9 @@ Start-Sleep -Seconds 5
 
 docker compose -p quasai exec ollama ollama pull phi4-mini
 
+# Rebuild image with latest code
+docker compose -p quasai build app
+
 # Clean stale output files from previous runs
 docker compose -p quasai run --rm --entrypoint sh app -c "rm -f /output/*.csv /output/*.json" 2>$null
 docker compose -p quasai run --rm --entrypoint quasai app /input/$FileName

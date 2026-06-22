@@ -24,6 +24,8 @@ sleep 5
 
 docker compose -p quasai exec ollama ollama pull phi4-mini
 
+docker compose -p quasai build app
+
 docker compose -p quasai run --rm --entrypoint quasai app "/input/$1"
 
 docker compose -p quasai down
