@@ -8,11 +8,12 @@ from dataclasses import dataclass
 
 import httpx
 
-from quasai.parser import _ITEM_RE
+from quasai.parser import count_items
 from quasai.types import Requirements, Section, TestCase
 
 _DEFAULT_MODEL = "phi4-mini"
 _DEFAULT_URL = "http://ollama:11434"
+_CHUNK_SIZE = 3
 _JSON_ARRAY_RE = re.compile(r"\[.*\]", re.DOTALL)
 
 
@@ -42,24 +43,40 @@ class OllamaProvider(LLMProvider):
 
     def _build_chunks(self, requirements: Requirements) -> list[Chunk]:
         chunks: list[Chunk] = []
+        buffer_parts: list[str] = []
+        buffer_count = 0
+        buffer_label = requirements.title or "Requirements"
+
+        def flush(label: str) -> None:
+            nonlocal buffer_parts, buffer_count
+            if not buffer_parts:
+                return
+            prompt = "\n".join(buffer_parts)
+            chunks.append(Chunk(prompt=prompt, label=label))
+            buffer_parts = []
+            buffer_count = 0
+
         for section in requirements.sections:
             sec_text = section.content
             for sub in section.subsections:
                 sec_text += "\n" + sub.content
-            items = list(_ITEM_RE.finditer(sec_text))
-            if not items:
-                continue
-            for i, m in enumerate(items):
-                start = m.start()
-                end = items[i + 1].start() if i + 1 < len(items) else len(sec_text)
-                item_text = sec_text[start:end].strip()
-                prompt = f"{section.heading}\n{item_text}"
-                chunks.append(Chunk(prompt=prompt, label=section.heading))
+            section_items = count_items(sec_text)
+            if buffer_count + section_items > _CHUNK_SIZE and buffer_parts:
+                flush(buffer_label)
+            buffer_parts.append(f"{section.heading}\n{section.content}")
+            for sub in section.subsections:
+                buffer_parts.append(f"\n{sub.heading}\n{sub.content}")
+            buffer_count += section_items
+            buffer_label = section.heading
+
+        flush(buffer_label)
+
         if not chunks:
             chunks.append(Chunk(
                 prompt=f"Заголовок: {requirements.title}\n",
                 label=requirements.title or "Requirements",
             ))
+
         return chunks
 
     async def generate(
