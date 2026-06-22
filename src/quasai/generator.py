@@ -117,10 +117,9 @@ class OllamaProvider(LLMProvider):
             "ABSOLUTE LANGUAGE RULE (highest priority, applies to all text values in JSON):\n"
             "- Your entire output must be in English.\n"
             "- Use only standard Latin alphabet (a-z, A-Z) and common punctuation.\n"
-            '- Words that look like transliterations from other languages (e.g., "юзер") '
-            'must be replaced with proper English (e.g., "user").\n'
-            "- Never copy words from the requirements in their original language; "
-            "always translate them into English.\n"
+            '- Words that look like transliterations from other languages (e.g., "юзер" → "user", '
+            '"free-юзер" → "free-user") must be replaced with proper English.\n'
+            "- Translate every word from the requirements into English.\n"
             "\n"
             "Generate test cases using ISTQB test design techniques:\n"
             "- Equivalence Partitioning: for each input or condition in the requirements, "
@@ -134,29 +133,28 @@ class OllamaProvider(LLMProvider):
             "- State Transition Testing: identify all explicit and implicit states "
             "(user roles, system modes, processing statuses, feature availability). "
             "Test both valid and invalid transitions, including unexpected events "
-            "(errors, restarts, timeouts) \u2013 verify that no state leaves the user "
-            "permanently blocked.\n"
+            "(errors, restarts, timeouts) \u2013 verify that every state is recoverable "
+            "and the user can continue.\n"
             "\n"
             "Coverage: ensure every functional requirement (each bullet point or \u201cshall\u201d "
             "statement) is covered by at least one test case. "
             "If a requirement contains multiple distinct conditions (e.g., positive and negative cases), "
             "generate separate tests for each. "
-            "Avoid generating redundant tests that verify essentially the same behavior with only trivial differences.\n"
+            "Generate only distinct tests that verify different behaviors; "
+            "skip cases that differ in only trivial details.\n"
             "\n"
             "Test case quality:\n"
             "- preconditions must be specific and measurable "
-            '(e.g., "User has 0 credits", not "User has insufficient credits").\n'
-            "- steps must be atomic actions; do not combine multiple actions into one step.\n"
-            "- expectedResult must be verifiable "
+            '(e.g., "User has 0 credits" rather than "User has insufficient credits").\n'
+            "- steps must be one atomic action per step.\n"
+            "- expectedResult must be the actual verifiable outcome "
             "(e.g., exact error message text or a clear state change), "
-            'avoid vague terms like "friendly message" without specifying the actual outcome.\n'
+            'rather than vague terms like "friendly message".\n'
             "\n"
-            "Output ONLY a JSON array of flat objects. "
-            "Each object MUST have exactly these 5 fields: "
+            "Output exactly 5 fields per JSON object: "
             "id (string), title (string), preconditions (string), "
             "steps (array of strings), expectedResult (string). "
-            "Do NOT add technique names, equivalence classes, boundary values, "
-            "state transitions, or any other fields.\n"
+            "The JSON contains only these fields.\n"
             "\n"
             'Example:\n'
             '{"id":"TC-001",'
@@ -168,12 +166,12 @@ class OllamaProvider(LLMProvider):
             '"expectedResult":"Account created; user is logged in, '
             "state changes to 'active'; confirmation email sent.\"}\n"
             "\n"
-            "Do not close the object before all fields are written.\n"
+            "Close the object only after all fields are written.\n"
             "\n"
             f"Requirements: {chunk.prompt}\n"
             "\n"
             "REMINDER: Output English only. "
-            'Translate all non-English words (e.g., "юзер" → "user"). '
+            'Translate all non-English words (e.g., "юзер" → "user", "free-юзер" → "free-user"). '
             "Use only standard Latin alphabet (a-z, A-Z).\n"
             "<|end|>"
         )
